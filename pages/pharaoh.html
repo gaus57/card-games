@@ -9,6 +9,99 @@
             width: 100%;
             height: 100%;
         }
+        html {
+            background: #00954D;
+        }
+        .hidden {
+            display: none !important;
+        }
+        #wait {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 400px;
+            height: 200px;
+            margin-top: -100px;
+            margin-left: -200px;
+            text-align: center;
+            color: #FFF;
+        }
+        #wait .lds-ripple {
+            margin-bottom: 20px;
+        }
+        .lds-ripple {
+            display: inline-block;
+            position: relative;
+            width: 64px;
+            height: 64px;
+        }
+        .lds-ripple div {
+            position: absolute;
+            border: 4px solid #fff;
+            opacity: 1;
+            border-radius: 50%;
+            animation: lds-ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+        }
+        .lds-ripple div:nth-child(2) {
+            animation-delay: -0.5s;
+        }
+        @keyframes lds-ripple {
+            0% {
+                top: 28px;
+                left: 28px;
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+            100% {
+                top: -1px;
+                left: -1px;
+                width: 58px;
+                height: 58px;
+                opacity: 0;
+            }
+        }
+        #players {
+
+        }
+        .player-info {
+            margin-bottom: 20px;
+            padding: 20px 10px;
+            opacity: .4;
+        }
+        .active {
+            opacity: 1 !important;
+        }
+        .player-avatar {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            margin-right: 10px;
+            font-size: 40px;
+            font-weight: bold;
+            line-height: 50px;
+            text-align: center;
+            color: #000;
+            background-color: #FFF;
+            border: 1px solid #FFF;
+            border-radius: 50%;
+            box-sizing: border-box;
+            vertical-align: middle;
+        }
+        .player-hand {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .player-hand div {
+            display: inline-block;
+            width: 78px;
+            height: 108px;
+            margin: 2px;
+            background: url(/static/classic-shirt.jpg);
+            background-position: center;
+            box-shadow: 0 1px 5px rgba(40,40,40,0.7);
+            border-radius: 5px;
+        }
         #discard {
             position: absolute;
             top: 50%;
@@ -36,9 +129,11 @@
             text-align: center;
             padding: 20px;
             box-sizing: border-box;
+            opacity: .4;
         }
         #hand .card {
             margin: 3px;
+            vertical-align: middle;
         }
         .card {
             display: inline-block;
@@ -106,7 +201,11 @@
     </style>
 </head>
 <body>
-    <div id="game">
+    <div id="wait">
+        <div class="lds-ripple"><div></div><div></div></div>
+        <div>Ожидание подключения других пользователей</div>
+    </div>
+    <div id="game" class="hidden">
         <div id="players"></div>
         <div id="discard"></div>
         <div id="bank" onclick="takeCard()"></div>
@@ -117,6 +216,10 @@
             conn.send(JSON.stringify({event: 'move', data: {takeCard: true}}));
         }
         function render (info) {
+            var wait = document.getElementById('wait');
+            wait.className = 'hidden';
+            var game = document.getElementById('game');
+            game.className = '';
             if (info.IsCompleted) {
                 alert('Игра окончена');
             }
@@ -126,7 +229,19 @@
                 if (info.Players[key].Id !== info.PlayerId) {
                     var player = document.createElement("div");
                     player.className = 'player-info';
-                    player.textContent = info.Players[key].Id + ' - ' + info.Players[key].HandCount;
+                    if (info.Players[key].Id === info.CurrentPlayerId) {
+                        player.className += ' active';
+                    }
+                    var avatar = document.createElement("div");
+                    avatar.className = 'player-avatar';
+                    avatar.textContent = info.Players[key].Id + 1;
+                    player.appendChild(avatar);
+                    var playerHand = document.createElement("div");
+                    playerHand.className = 'player-hand';
+                    for (var i = 1; i <= info.Players[key].HandCount; i++) {
+                        playerHand.appendChild(document.createElement("div"));
+                    }
+                    player.appendChild(playerHand);
                     players.appendChild(player);
                 }
             }
@@ -138,7 +253,15 @@
             }
 
             var hand = document.getElementById('hand');
+            hand.className = '';
+            if (info.PlayerId === info.CurrentPlayerId) {
+                hand.className = 'active';
+            }
             hand.innerHTML = '';
+            var myAvatar = document.createElement("div");
+            myAvatar.className = 'player-avatar';
+            myAvatar.textContent = info.PlayerId + 1;
+            hand.appendChild(myAvatar);
             for (var key in info.Hand) {
                 var card = document.createElement("span");
                 card.className = 'card classic-' + info.Hand[key].Code;
@@ -165,7 +288,10 @@
             }
         } else {
             var item = document.createElement("div");
-            item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
+            item.innerHTML = "<b>Ваш браузер не поддерживает WebSockets.</b>";
+            var wait = document.getElementById('wait');
+            wait.innerHTML = '';
+            wait.appendChild(item);
         }
     </script>
 </body>
