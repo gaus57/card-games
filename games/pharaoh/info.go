@@ -1,21 +1,29 @@
 package pharaoh
 
 type Info struct {
-	players         []PlayerInfo
-	currentPlayerId int
-	bancCount       int
-	discardCount    int
-	isCompleted     bool
-	hand            []*GameCard
-	canMove         bool
-	canTake         bool
-	canSkip         bool
+	PlayerId        int
+	Players         []PlayerInfo
+	CurrentPlayerId int
+	BancCount       int
+	DiscardCount    int
+	IsCompleted     bool
+	TopCard         CardInfo
+	Hand            []CardInfo
+	CanMove         bool
+	CanTake         bool
+	CanSkip         bool
 }
 
 type PlayerInfo struct {
-	id        int
-	handCount int
-	points    int
+	Id        int
+	HandCount int
+	Points    int
+}
+
+type CardInfo struct {
+	Code     string
+	CardCode string
+	SuitCode string
 }
 
 func newInfo(g *Game, playerId int) *Info {
@@ -26,27 +34,42 @@ func newInfo(g *Game, playerId int) *Info {
 	var players []PlayerInfo
 	for i, p := range g.players {
 		players = append(players, PlayerInfo{
-			id:        p.id,
-			handCount: p.hand.count(),
-			points:    0,
+			Id:        p.id,
+			HandCount: p.hand.count(),
+			Points:    0,
 		})
 		if g.isCompleted {
-			players[i].points = p.hand.points()
+			players[i].Points = p.hand.points()
 		}
 	}
-	var hand []*GameCard
+	var hand []CardInfo
 	for _, card := range player.hand.cards {
-		hand = append(hand, card)
+		gc := CardInfo{
+			Code:     card.code(),
+			CardCode: card.card.Code(),
+			SuitCode: card.card.SuitCode(),
+		}
+		hand = append(hand, gc)
 	}
-	return &Info{
-		players:         players,
-		currentPlayerId: g.currentPlayerId,
-		bancCount:       g.bank.count(),
-		discardCount:    g.discard.count(),
-		isCompleted:     g.isCompleted,
-		hand:            hand,
-		canMove:         player.canMove(),
-		canTake:         player.canTake(),
-		canSkip:         player.canSkip(),
+	info := &Info{
+		PlayerId:        playerId,
+		Players:         players,
+		CurrentPlayerId: g.currentPlayerId,
+		BancCount:       g.bank.count(),
+		DiscardCount:    g.discard.count(),
+		IsCompleted:     g.isCompleted,
+		Hand:            hand,
+		CanMove:         player.canMove(),
+		CanTake:         player.canTake(),
+		CanSkip:         player.canSkip(),
 	}
+	tc := g.topCard()
+	if tc != nil {
+		info.TopCard = CardInfo{
+			Code:     tc.code(),
+			CardCode: tc.card.Code(),
+			SuitCode: tc.card.SuitCode(),
+		}
+	}
+	return info
 }

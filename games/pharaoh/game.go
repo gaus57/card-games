@@ -15,8 +15,8 @@ type Game struct {
 func NewGame() *Game {
 	return &Game{
 		MinPlayers:        2,
-		MaxPlayers:        5,
-		players:           make([]*Player, 0, 5),
+		MaxPlayers:        2,
+		players:           make([]*Player, 0, 2),
 		bank:              newBank(),
 		discard:           newBank(),
 		currentPlayerId:   0,
@@ -150,23 +150,23 @@ func (g *Game) Move(m *Move) error {
 	if !g.isStarted || g.isCompleted {
 		return newError("Игра неактивна")
 	}
-	player := g.getPlayer(m.playerId)
+	player := g.getPlayer(m.PlayerId)
 	if player == nil {
 		return newError("Игрок не в игре")
 	}
-	if g.currentPlayerId != m.playerId {
+	if g.currentPlayerId != m.PlayerId {
 		return newError("Невозможно играть не в свой ход")
 	}
-	if m.cardCode != "" {
-		card := player.hand.give(m.cardCode)
+	if m.CardCode != "" {
+		card := player.hand.give(m.CardCode)
 		if card == nil {
 			return newError("У игрока нет такой карты")
 		}
-		if err := g.putCard(card, m.suitCode); err != nil {
+		if err := g.putCard(card, m.SuitCode); err != nil {
 			player.hand.push(card)
 			return err
 		}
-	} else if m.takeCard {
+	} else if m.TakeCard {
 		if !player.canTake() {
 			return newError("Невозможно взять карту")
 		}

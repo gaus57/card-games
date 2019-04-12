@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Фараон</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #discard {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-top: -70px;
+            margin-left: -90px;
+        }
+        #bank {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-top: -70px;
+            margin-right: -90px;
+            width: 78px;
+            height: 108px;
+            background: url(/static/classic-shirt.jpg);
+            background-position: -15px -20px;
+            box-shadow: 0 1px 5px rgba(40,40,40,0.7);
+            border-radius: 5px;
+        }
+        #hand {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #hand .card {
+            margin: 3px;
+        }
+        .card {
+            display: inline-block;
+            width: 78px;
+            height: 108px;
+            background: url(/static/classic.jpg);
+            box-shadow: 0 0 5px rgba(40,40,40,0.7);
+            border-radius: 5px;
+        }
+        .card.classic-2-diamonds { background-position: -26px 363px; }
+        .card.classic-3-diamonds { background-position: -110px 363px; }
+        .card.classic-4-diamonds { background-position: -194px 363px; }
+        .card.classic-5-diamonds { background-position: -278px 363px; }
+        .card.classic-6-diamonds { background-position: -362px 363px; }
+        .card.classic-7-diamonds { background-position: -446px 363px; }
+        .card.classic-8-diamonds { background-position: -530px 363px; }
+        .card.classic-9-diamonds { background-position: -614px 363px; }
+        .card.classic-10-diamonds { background-position: -698px 363px; }
+        .card.classic-jack-diamonds { background-position: -278px 983px; }
+        .card.classic-queen-diamonds { background-position: -614px 982px; }
+        .card.classic-king-diamonds { background-position: -194px 867px; }
+        .card.classic-ace-diamonds { background-position: -530px 867px; }
+
+        .card.classic-2-hearts { background-position: -26px 478px; }
+        .card.classic-3-hearts { background-position: -110px 478px; }
+        .card.classic-4-hearts { background-position: -194px 478px; }
+        .card.classic-5-hearts { background-position: -278px 478px; }
+        .card.classic-6-hearts { background-position: -362px 478px; }
+        .card.classic-7-hearts { background-position: -446px 478px; }
+        .card.classic-8-hearts { background-position: -530px 478px; }
+        .card.classic-9-hearts { background-position: -614px 478px; }
+        .card.classic-10-hearts { background-position: -698px 478px; }
+        .card.classic-jack-hearts { background-position: -110px 983px; }
+        .card.classic-queen-hearts { background-position: 354px 982px; }
+        .card.classic-king-hearts { background-position: -26px 867px; }
+        .card.classic-ace-hearts { background-position: 354px 867px; }
+
+        .card.classic-2-spades { background-position: -26px 593px; }
+        .card.classic-3-spades { background-position: -110px 593px; }
+        .card.classic-4-spades { background-position: -194px 593px; }
+        .card.classic-5-spades { background-position: -278px 593px; }
+        .card.classic-6-spades { background-position: -362px 593px; }
+        .card.classic-7-spades { background-position: -446px 593px; }
+        .card.classic-8-spades { background-position: -530px 593px; }
+        .card.classic-9-spades { background-position: -614px 593px; }
+        .card.classic-10-spades { background-position: -698px 593px; }
+        .card.classic-jack-spades { background-position: 606px 982px; }
+        .card.classic-queen-spades { background-position: 270px 982px; }
+        .card.classic-king-spades { background-position: 690px 867px; }
+        .card.classic-ace-spades { background-position: 438px 867px; }
+
+        .card.classic-2-clubs { background-position: -26px 708px; }
+        .card.classic-3-clubs { background-position: -110px 708px; }
+        .card.classic-4-clubs { background-position: -194px 708px; }
+        .card.classic-5-clubs { background-position: -278px 708px; }
+        .card.classic-6-clubs { background-position: -362px 708px; }
+        .card.classic-7-clubs { background-position: -446px 708px; }
+        .card.classic-8-clubs { background-position: -530px 708px; }
+        .card.classic-9-clubs { background-position: -614px 708px; }
+        .card.classic-10-clubs { background-position: -698px 708px; }
+        .card.classic-jack-clubs { background-position: -26px 982px; }
+        .card.classic-queen-clubs { background-position: 438px 982px; }
+        .card.classic-king-clubs { background-position: 103px 982px; }
+        .card.classic-ace-clubs { background-position: 522px 867px; }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <div id="players"></div>
+        <div id="discard"></div>
+        <div id="bank" onclick="takeCard()"></div>
+        <div id="hand"></div>
+    </div>
+    <script type="text/javascript">
+        function takeCard() {
+            conn.send(JSON.stringify({event: 'move', data: {takeCard: true}}));
+        }
+        function render (info) {
+            if (info.IsCompleted) {
+                alert('Игра окончена');
+            }
+            var players = document.getElementById('players');
+            players.innerHTML = '';
+            for (var key in info.Players) {
+                if (info.Players[key].Id !== info.PlayerId) {
+                    var player = document.createElement("div");
+                    player.className = 'player-info';
+                    player.textContent = info.Players[key].Id + ' - ' + info.Players[key].HandCount;
+                    players.appendChild(player);
+                }
+            }
+
+            var discard = document.getElementById('discard');
+            discard.className = '';
+            if (info.TopCard.Code) {
+                discard.className = 'card classic-' + info.TopCard.Code;
+            }
+
+            var hand = document.getElementById('hand');
+            hand.innerHTML = '';
+            for (var key in info.Hand) {
+                var card = document.createElement("span");
+                card.className = 'card classic-' + info.Hand[key].Code;
+                card.dataset.code = info.Hand[key].Code;
+                card.onclick = function (e) {
+                    conn.send(JSON.stringify({event: 'move', data: {cardCode: e.target.dataset.code}}));
+                };
+                hand.appendChild(card);
+            }
+        }
+        if (window["WebSocket"]) {
+            conn = new WebSocket("ws://" + location.host + "/ws" + location.pathname);
+            conn.onclose = function (evt) {
+                console.log('close');
+            };
+            conn.onmessage = function (evt) {
+                var msg = JSON.parse(evt.data);
+                render(msg)
+                console.log('message', msg);
+            };
+            conn.onopen = function (evt) {
+                conn.send(JSON.stringify({event: "enter", 'data': location.pathname}));
+                console.log('open');
+            }
+        } else {
+            var item = document.createElement("div");
+            item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
+        }
+    </script>
+</body>
+</html>

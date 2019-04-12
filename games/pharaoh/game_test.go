@@ -280,50 +280,50 @@ func TestGameMove(t *testing.T) {
 	g.Join()
 	g.players[1].hand.push(newTestGameCard("8", "hearts"))
 	g.players[1].hand.push(newTestGameCard("queen", "hearts"))
-	if g.Move(&Move{playerId: 0, cardCode: "9-clubs"}) == nil {
+	if g.Move(&Move{PlayerId: 0, CardCode: "9-clubs"}) == nil {
 		t.Error("Error game move")
 	}
 	g.isStarted = true
-	if g.Move(&Move{playerId: 0, cardCode: "9-hearts"}) == nil {
+	if g.Move(&Move{PlayerId: 0, CardCode: "9-hearts"}) == nil {
 		t.Error("Error game move")
 	}
-	if g.Move(&Move{playerId: 0, cardCode: "9-clubs"}) != nil {
+	if g.Move(&Move{PlayerId: 0, CardCode: "9-clubs"}) != nil {
 		t.Error("Error game move")
 	}
-	if g.Move(&Move{playerId: 2, takeCard: true}) == nil {
+	if g.Move(&Move{PlayerId: 2, TakeCard: true}) == nil {
 		t.Error("Error game move")
 	}
-	if g.Move(&Move{playerId: 0, takeCard: true}) == nil {
+	if g.Move(&Move{PlayerId: 0, TakeCard: true}) == nil {
 		t.Error("Error game move")
 	}
-	if g.Move(&Move{playerId: 1, takeCard: true}) == nil {
+	if g.Move(&Move{PlayerId: 1, TakeCard: true}) == nil {
 		t.Error("Error game move")
 	}
-	if g.Move(&Move{playerId: 1, cardCode: "8-hearts"}) == nil {
+	if g.Move(&Move{PlayerId: 1, CardCode: "8-hearts"}) == nil {
 		t.Error("Error game move")
 	}
 	if g.players[1].hand.count() != 2 {
 		t.Error("Error game move")
 	}
-	if g.Move(&Move{playerId: 1, cardCode: "queen-hearts", suitCode: "spades"}) != nil {
+	if g.Move(&Move{PlayerId: 1, CardCode: "queen-hearts", SuitCode: "spades"}) != nil {
 		t.Error("Error game move")
 	}
 	if g.requestedSuitCode != "spades" {
 		t.Error("Error game move")
 	}
-	if g.Move(&Move{playerId: 0, takeCard: true}) != nil {
+	if g.Move(&Move{PlayerId: 0, TakeCard: true}) != nil {
 		t.Error("Error game move")
 	}
-	if g.Move(&Move{playerId: 0, cardCode: "7-spades"}) != nil {
+	if g.Move(&Move{PlayerId: 0, CardCode: "7-spades"}) != nil {
 		t.Error("Error game move")
 	}
-	if g.Move(&Move{playerId: 0, takeCard: true}) != nil {
+	if g.Move(&Move{PlayerId: 0, TakeCard: true}) != nil {
 		t.Error("Error game move")
 	}
 	if g.currentPlayerId != 1 {
 		t.Error("Error game move")
 	}
-	if g.Move(&Move{playerId: 1}) == nil {
+	if g.Move(&Move{PlayerId: 1}) == nil {
 		t.Error("Error game move")
 	}
 }
@@ -347,34 +347,34 @@ func TestGameInfo(t *testing.T) {
 	if info == nil {
 		t.Error("Error game info")
 	}
-	if info.players[0].handCount != 2 || info.players[1].handCount != 1 {
+	if info.Players[0].HandCount != 2 || info.Players[1].HandCount != 1 {
 		t.Error("Error game info")
 	}
-	if info.players[0].points != 0 || info.players[1].points != 0 {
+	if info.Players[0].Points != 0 || info.Players[1].Points != 0 {
 		t.Error("Error game info")
 	}
-	if info.currentPlayerId != 1 {
+	if info.CurrentPlayerId != 1 {
 		t.Error("Error game info")
 	}
-	if info.bancCount != 3 {
+	if info.BancCount != 3 {
 		t.Error("Error game info")
 	}
-	if info.discardCount != 0 {
+	if info.DiscardCount != 0 {
 		t.Error("Error game info")
 	}
-	if info.hand[0].code() != "8-hearts" {
+	if info.Hand[0].Code != "8-hearts" {
 		t.Error("Error game info")
 	}
-	if info.isCompleted {
+	if info.IsCompleted {
 		t.Error("Error game info")
 	}
-	if !info.canMove {
+	if !info.CanMove {
 		t.Error("Error game info")
 	}
-	if info.canTake {
+	if info.CanTake {
 		t.Error("Error game info")
 	}
-	if info.canSkip {
+	if info.CanSkip {
 		t.Error("Error game info")
 	}
 	g.isCompleted = true
@@ -382,10 +382,10 @@ func TestGameInfo(t *testing.T) {
 	if info == nil {
 		t.Error("Error game info")
 	}
-	if !info.isCompleted {
+	if !info.IsCompleted {
 		t.Error("Error game info")
 	}
-	if info.players[0].points != 19 || info.players[1].points != 8 {
+	if info.Players[0].Points != 19 || info.Players[1].Points != 8 {
 		t.Error("Error game info")
 	}
 }
