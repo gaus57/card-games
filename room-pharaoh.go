@@ -5,6 +5,7 @@ import (
 	"card-games/games/pharaoh"
 	"encoding/json"
 	"log"
+	"time"
 )
 
 type RoomPharaoh struct {
@@ -61,6 +62,7 @@ func (r RoomPharaoh) startGame() {
 	}
 	r.game.Start(cards)
 	r.hall.play <- &r
+	r.broadcastInfo()
 }
 
 func (r RoomPharaoh) broadcastInfo() {
@@ -85,9 +87,14 @@ func (r RoomPharaoh) run() {
 			log.Println("register user in room ", r.path)
 			u.room = r
 			r.users[u], _ = r.game.Join()
+			if r.game.MinPlayers < r.game.MaxPlayers && len(r.users) == r.game.MinPlayers {
+				timer := time.AfterFunc(time.Second*10, func() {
+					r.startGame()
+				})
+				defer timer.Stop()
+			}
 			if len(r.users) == r.game.MaxPlayers {
 				r.startGame()
-				r.broadcastInfo()
 			}
 		case u := <-r.unregister:
 			log.Println("unregister user in room ", r.path)

@@ -15,8 +15,8 @@ type Game struct {
 func NewGame() *Game {
 	return &Game{
 		MinPlayers:        2,
-		MaxPlayers:        2,
-		players:           make([]*Player, 0, 2),
+		MaxPlayers:        5,
+		players:           make([]*Player, 0, 5),
 		bank:              newBank(),
 		discard:           newBank(),
 		currentPlayerId:   0,

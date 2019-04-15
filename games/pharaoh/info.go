@@ -1,17 +1,18 @@
 package pharaoh
 
 type Info struct {
-	PlayerId        int
-	Players         []PlayerInfo
-	CurrentPlayerId int
-	BancCount       int
-	DiscardCount    int
-	IsCompleted     bool
-	TopCard         CardInfo
-	Hand            []CardInfo
-	CanMove         bool
-	CanTake         bool
-	CanSkip         bool
+	PlayerId          int
+	Players           []PlayerInfo
+	CurrentPlayerId   int
+	BancCount         int
+	DiscardCount      int
+	IsCompleted       bool
+	RequestedSuitCode string
+	TopCard           CardInfo
+	Hand              []CardInfo
+	CanMove           bool
+	CanTake           bool
+	CanSkip           bool
 }
 
 type PlayerInfo struct {
@@ -52,16 +53,17 @@ func newInfo(g *Game, playerId int) *Info {
 		hand = append(hand, gc)
 	}
 	info := &Info{
-		PlayerId:        playerId,
-		Players:         players,
-		CurrentPlayerId: g.currentPlayerId,
-		BancCount:       g.bank.count(),
-		DiscardCount:    g.discard.count(),
-		IsCompleted:     g.isCompleted,
-		Hand:            hand,
-		CanMove:         player.canMove(),
-		CanTake:         player.canTake(),
-		CanSkip:         player.canSkip(),
+		PlayerId:          playerId,
+		Players:           players,
+		CurrentPlayerId:   g.currentPlayerId,
+		RequestedSuitCode: g.requestedSuitCode,
+		BancCount:         g.bank.count(),
+		DiscardCount:      g.discard.count(),
+		IsCompleted:       g.isCompleted,
+		Hand:              hand,
+		CanMove:           player.canMove(),
+		CanTake:           player.canTake(),
+		CanSkip:           player.canSkip(),
 	}
 	tc := g.topCard()
 	if tc != nil {

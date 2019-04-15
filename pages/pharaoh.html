@@ -15,6 +15,50 @@
         .hidden {
             display: none !important;
         }
+        .popup-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,.6);
+            z-index: 10;
+        }
+        .popup {
+            width: 300px;
+            margin: 50px auto;
+            padding: 10px 20px;
+            box-sizing: border-box;
+            background: #FFF;
+        }
+        .popup-actions {
+            padding-top: 20px;
+            border-top: 1px solid #DDD;
+            text-align: center;
+        }
+        .popup-actions a {
+            display: inline-block;
+            width: 40%;
+            height: 30px;
+            margin: 0 5px;
+            background: #2CBF4E;
+            border-radius: 5px;
+            color: #FFF;
+            text-align: center;
+            text-decoration: none;
+            font-size: 16px;
+            line-height: 30px;
+        }
+        .player-result {
+            padding: 5px 0;
+        }
+        .player-points {
+            display: inline-block;
+            margin-left: 20px;
+            color: #333;
+            font-size: 20px;
+            vertical-align: middle;
+        }
         #wait {
             position: absolute;
             top: 50%;
@@ -109,6 +153,23 @@
             margin-top: -70px;
             margin-left: -90px;
         }
+        #discard .suit-diamonds,
+        #discard .suit-spades,
+        #discard .suit-hearts,
+        #discard .suit-clubs {
+            position: absolute;
+            width: 38px;
+            height: 38px;
+            left: -50px;
+            top: 50%;
+            margin-top: -19px;
+            background: url(/static/suits.png);
+            background-size: 76px;
+        }
+        #discard .suit-diamonds { background-position: 2px 38px; }
+        #discard .suit-spades { background-position: 4px 0px; }
+        #discard .suit-hearts { background-position: 36px 0; }
+        #discard .suit-clubs { background-position: 38px 38px; }
         #bank {
             position: absolute;
             top: 50%;
@@ -136,6 +197,7 @@
             vertical-align: middle;
         }
         .card {
+            position: relative;
             display: inline-block;
             width: 78px;
             height: 108px;
@@ -143,6 +205,42 @@
             box-shadow: 0 0 5px rgba(40,40,40,0.7);
             border-radius: 5px;
         }
+        .card .suits {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #FFF;
+            overflow: hidden;
+        }
+        .suits .suit {
+            position: relative;
+            display: block;
+            float: left;
+            width: 50%;
+            height: 50%;
+            cursor: pointer;
+        }
+        .suit:hover {
+            background-color: #CCC;
+        }
+        .suit::after {
+            content: '';
+            position: absolute;
+            width: 38px;
+            height: 38px;
+            left: 50%;
+            top: 50%;
+            margin-left: -19px;
+            margin-top: -19px;
+            background: url(/static/suits.png);
+            background-size: 76px;
+        }
+        .suit.diamonds::after { background-position: 2px 38px; }
+        .suit.spades::after { background-position: 4px 0px; }
+        .suit.hearts::after { background-position: 36px 0; }
+        .suit.clubs::after { background-position: 38px 38px; }
         .card.classic-2-diamonds { background-position: -26px 363px; }
         .card.classic-3-diamonds { background-position: -110px 363px; }
         .card.classic-4-diamonds { background-position: -194px 363px; }
@@ -211,17 +309,70 @@
         <div id="bank" onclick="takeCard()"></div>
         <div id="hand"></div>
     </div>
+    <div class="popup-container hidden">
+        <div class="popup" id="complete-popup">
+            <div id="complete-popup-content"></div>
+            <div class="popup-actions">
+                <a href="javascript:location.reload(true)">Играть ещё</a>
+                <a href="/">Выход</a>
+            </div>
+        </div>
+    <div>
     <script type="text/javascript">
         function takeCard() {
             conn.send(JSON.stringify({event: 'move', data: {takeCard: true}}));
         }
+        function moveCard(code, suit) {
+            var data = {cardCode: code};
+            if (suit) {
+                data.suitCode = suit;
+            }
+            conn.send(JSON.stringify({event: 'move', data: data}));
+        }
+        function completeGame(info) {
+            var popup = document.getElementById('complete-popup');
+            var content = document.getElementById('complete-popup-content');
+            var results = info.Players;
+            results.sort(function(a,b) {return (a.Points > b.Points) ? 1 : ((b.Points > a.Points) ? -1 : 0)});
+            for (var key in results) {
+                var player = document.createElement("div");
+                player.className = 'player-result';
+                var avatar = document.createElement("div");
+                avatar.className = 'player-avatar';
+                avatar.textContent = info.Players[key].Id + 1;
+                player.appendChild(avatar);
+                var points = document.createElement("div");
+                points.className = 'player-points';
+                points.textContent = info.Players[key].Points;
+                player.appendChild(points);
+                content.appendChild(player);
+            }
+            popup.parentNode.className = popup.parentNode.className.replace(' hidden', '');
+        }
+        function selectSuitPopup(element) {
+            var popup = document.createElement("div");
+            popup.className = 'suits';
+            var suits = ['diamonds', 'spades', 'hearts', 'clubs'];
+            for (var i in suits) {
+                var suit = document.createElement("div");
+                suit.className = 'suit ' + suits[i];
+                suit.dataset.suitCode = suits[i];
+                suit.onclick = selectSuit;
+                popup.appendChild(suit);
+            }
+            element.appendChild(popup);
+        }
+        function selectSuit(e) {
+            moveCard(e.target.parentNode.parentNode.dataset.code, e.target.dataset.suitCode);
+            e.target.parentNode.remove();
+        }
         function render (info) {
             var wait = document.getElementById('wait');
-            wait.className = 'hidden';
+            wait && wait.remove();
             var game = document.getElementById('game');
             game.className = '';
             if (info.IsCompleted) {
-                alert('Игра окончена');
+                completeGame(info);
             }
             var players = document.getElementById('players');
             players.innerHTML = '';
@@ -248,6 +399,12 @@
 
             var discard = document.getElementById('discard');
             discard.className = '';
+            discard.innerHTML = '';
+            if (info.RequestedSuitCode) {
+                var reqSuit = document.createElement("div");
+                reqSuit.className = 'suit-' + info.RequestedSuitCode;
+                discard.appendChild(reqSuit);
+            }
             if (info.TopCard.Code) {
                 discard.className = 'card classic-' + info.TopCard.Code;
             }
@@ -266,8 +423,13 @@
                 var card = document.createElement("span");
                 card.className = 'card classic-' + info.Hand[key].Code;
                 card.dataset.code = info.Hand[key].Code;
+                card.dataset.cardCode = info.Hand[key].CardCode;
                 card.onclick = function (e) {
-                    conn.send(JSON.stringify({event: 'move', data: {cardCode: e.target.dataset.code}}));
+                    if (e.target.dataset.cardCode === 'queen') {
+                        selectSuitPopup(e.target);
+                        return;
+                    }
+                    moveCard(e.target.dataset.code);
                 };
                 hand.appendChild(card);
             }
