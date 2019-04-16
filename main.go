@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 	"time"
 	// "github.com/google/uuid"
 )
@@ -69,6 +70,7 @@ func serveWs(h *Hall, w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	flag.Parse()
+	var port = os.Getenv("PORT")
 	hall := newHall()
 	go hall.run()
 	http.HandleFunc("/", serveHome)
@@ -78,7 +80,12 @@ func main() {
 	fs := http.FileServer(http.Dir("static/"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
-	err := http.ListenAndServe(*addr, nil)
+	if port != "" {
+		port = ":" + port
+	} else {
+		port = *addr
+	}
+	err := http.ListenAndServe(port, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
