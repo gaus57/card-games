@@ -3,14 +3,14 @@ package main
 import "log"
 
 type Hall struct {
-	openRooms  map[string]Room
-	playRooms  map[Room]bool
+	openRooms  map[string]RoomInterface
+	playRooms  map[RoomInterface]bool
 	users      map[string]*User
 	register   chan *User
 	unregister chan *User
 	enter      chan *Invite
-	play       chan Room
-	close      chan Room
+	play       chan RoomInterface
+	close      chan RoomInterface
 }
 
 type Invite struct {
@@ -20,14 +20,14 @@ type Invite struct {
 
 func newHall() *Hall {
 	return &Hall{
-		openRooms:  make(map[string]Room),
-		playRooms:  make(map[Room]bool),
+		openRooms:  make(map[string]RoomInterface),
+		playRooms:  make(map[RoomInterface]bool),
 		users:      make(map[string]*User),
 		register:   make(chan *User),
 		unregister: make(chan *User),
 		enter:      make(chan *Invite),
-		play:       make(chan Room),
-		close:      make(chan Room),
+		play:       make(chan RoomInterface),
+		close:      make(chan RoomInterface),
 	}
 }
 
@@ -48,13 +48,13 @@ func (h *Hall) run() {
 			log.Println("unregister user", u.uid)
 			if _, ok := h.users[u.uid]; ok {
 				delete(h.users, u.uid)
-				for c, _ := range u.clients {
-					close(c.send)
-				}
+				u.close()
 			}
 		case invite := <-h.enter:
 			log.Println("invite room ", invite.path)
-			if r, ok := h.openRooms[invite.path]; ok {
+			if invite.user.room != nil && invite.user.room.getPath() == invite.path {
+				log.Println("become ", invite.path)
+			} else if r, ok := h.openRooms[invite.path]; ok {
 				r.enter(invite.user)
 			} else {
 				log.Println("create room ", invite.path)

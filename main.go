@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 	// "github.com/google/uuid"
 )
 
@@ -46,15 +45,16 @@ func serveWs(h *Hall, w http.ResponseWriter, r *http.Request) {
 	if cookie, err := r.Cookie("uid"); err == nil {
 		uid = cookie.Value
 	}
+	log.Println("connect uid =", uid)
 	user := h.getUser(uid)
 	if user == nil {
 		user = newUser(h)
-		cookie := &http.Cookie{
-			Name:    "uid",
-			Value:   user.uid,
-			Expires: time.Now().Add(365 * 24 * time.Hour),
-		}
-		http.SetCookie(w, cookie)
+		// cookie := &http.Cookie{
+		// 	Name:    "uid",
+		// 	Value:   user.uid,
+		// 	Expires: time.Now().Add(365 * 24 * time.Hour),
+		// }
+		// http.SetCookie(w, cookie)
 	}
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -62,10 +62,14 @@ func serveWs(h *Hall, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	client := &Client{user: user, conn: conn, send: make(chan []byte)}
-	user.addClient(client)
 
 	go client.writePump()
 	go client.readPump()
+
+	user.addClient(client)
+	if user.uid != uid {
+		user.send(Message{Event: "uid", Data: user.uid})
+	}
 }
 
 func main() {

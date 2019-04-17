@@ -185,3 +185,7 @@ func (g *Game) Move(m *Move) error {
 func (g *Game) Info(playerId int) *Info {
 	return newInfo(g, playerId)
 }
+
+func (g *Game) IsStarted() bool {
+	return g.isStarted
+}

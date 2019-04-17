@@ -109,9 +109,11 @@
 
         }
         .player-info {
+            width: 30%;
             margin-bottom: 20px;
             padding: 20px 10px;
             opacity: .4;
+            box-sizing: border-box;
         }
         .active {
             opacity: 1 !important;
@@ -138,11 +140,12 @@
         }
         .player-hand div {
             display: inline-block;
-            width: 78px;
-            height: 108px;
+            width: 39px;
+            height: 54px;
             margin: 2px;
             background: url(/static/classic-shirt.jpg);
             background-position: center;
+            background-size: 45px;
             box-shadow: 0 1px 5px rgba(40,40,40,0.7);
             border-radius: 5px;
         }
@@ -179,7 +182,8 @@
             width: 78px;
             height: 108px;
             background: url(/static/classic-shirt.jpg);
-            background-position: -15px -20px;
+            background-position: center;
+            background-size: 90px;
             box-shadow: 0 1px 5px rgba(40,40,40,0.7);
             border-radius: 5px;
         }
@@ -320,14 +324,14 @@
     <div>
     <script type="text/javascript">
         function takeCard() {
-            conn.send(JSON.stringify({event: 'move', data: {takeCard: true}}));
+            transport.send('move', {takeCard: true});
         }
         function moveCard(code, suit) {
             var data = {cardCode: code};
             if (suit) {
                 data.suitCode = suit;
             }
-            conn.send(JSON.stringify({event: 'move', data: data}));
+            transport.send('move', data);
         }
         function completeGame(info) {
             var popup = document.getElementById('complete-popup');
@@ -434,27 +438,71 @@
                 hand.appendChild(card);
             }
         }
-        if (window["WebSocket"]) {
-            conn = new WebSocket("ws://" + location.host + "/ws" + location.pathname);
-            conn.onclose = function (evt) {
-                console.log('close');
-            };
-            conn.onmessage = function (evt) {
-                var msg = JSON.parse(evt.data);
-                render(msg)
-                console.log('message', msg);
-            };
-            conn.onopen = function (evt) {
-                conn.send(JSON.stringify({event: "enter", 'data': location.pathname}));
-                console.log('open');
+        function ws() {
+            var that = this;
+
+            this.attempt = 1;
+
+            this.open = function() {
+                this.conn = new WebSocket("ws://" + location.host + "/ws" + location.pathname);
+                this.conn.onclose = function (evt) {
+                    console.log('connection close');
+                    that.reopen();
+                };
+                this.conn.onmessage = function (evt) {
+                    var msg = JSON.parse(evt.data);
+                    console.log('connection message', msg);
+                    switch (msg.Event) {
+                        case 'game-info':
+                            render(msg.Data)
+                            break;
+                        case 'uid':
+                            document.cookie = 'uid='+msg.Data+'; path=/';
+                            break;
+                    }
+                };
+                this.conn.onopen = function (evt) {
+                    console.log('connection open');
+                    that.attempt = 1;
+                    that.send('enter', location.pathname);
+                }
+                this.conn.onerror = function () {
+                    console.log('connection error');
+                }
             }
-        } else {
-            var item = document.createElement("div");
-            item.innerHTML = "<b>Ваш браузер не поддерживает WebSockets.</b>";
-            var wait = document.getElementById('wait');
-            wait.innerHTML = '';
-            wait.appendChild(item);
+
+            this.reopen = function () {
+                console.log('connection reopen');
+                setTimeout(
+                    function () {
+                        that.open();
+                    },
+                    Math.max((that.attempt-1)*2000+100, 10000)
+                );
+                this.attempt++;
+            }
+
+            this.send = function(event, data) {
+                var msg = {event: event, data: data};
+                if (this.conn) {
+                    console.log('connection send', msg);
+                    this.conn.send(JSON.stringify(msg));
+                } else {
+                    console.log('not send - no open connection');
+                }
+            }
+
+            if (window["WebSocket"]) {
+                this.open();
+            } else {
+                var item = document.createElement("div");
+                item.innerHTML = "<b>Ваш браузер не поддерживает WebSockets.</b>";
+                var wait = document.getElementById('wait');
+                wait.innerHTML = '';
+                wait.appendChild(item);
+            }
         }
+        var transport = new ws();
     </script>
 </body>
 </html>

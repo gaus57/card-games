@@ -9,49 +9,15 @@ import (
 )
 
 type RoomPharaoh struct {
-	game       *pharaoh.Game
-	path       string
-	hall       *Hall
-	users      map[*User]int
-	action     chan *Action
-	register   chan *User
-	unregister chan *User
+	*Room
+	game *pharaoh.Game
 }
 
-func newRoomPharaoh(h *Hall, path string) Room {
+func newRoomPharaoh(h *Hall, path string) RoomInterface {
 	return &RoomPharaoh{
-		game:       pharaoh.NewGame(),
-		path:       path,
-		hall:       h,
-		action:     make(chan *Action),
-		register:   make(chan *User),
-		unregister: make(chan *User),
-		users:      make(map[*User]int),
+		Room: newRoom(h, path),
+		game: pharaoh.NewGame(),
 	}
-}
-
-func (r RoomPharaoh) getPath() string {
-	return r.path
-}
-
-func (r RoomPharaoh) enter(u *User) error {
-	r.register <- u
-	return nil
-}
-
-func (r RoomPharaoh) leave(u *User) error {
-	r.unregister <- u
-	return nil
-}
-
-func (r RoomPharaoh) close() {
-	close(r.register)
-	close(r.unregister)
-	close(r.action)
-}
-
-func (r RoomPharaoh) runAction(a *Action) {
-	r.action <- a
 }
 
 func (r RoomPharaoh) startGame() {
@@ -66,17 +32,21 @@ func (r RoomPharaoh) startGame() {
 }
 
 func (r RoomPharaoh) broadcastInfo() {
-	for u, id := range r.users {
-		info := r.game.Info(id)
-		msg, _ := json.Marshal(info)
-		for c := range u.clients {
-			select {
-			case c.send <- msg:
-			default:
-				close(c.send)
-				delete(u.clients, c)
-			}
+	for u, _ := range r.users {
+		r.sendInfo(u)
+	}
+}
+
+func (r RoomPharaoh) sendInfo(u *User) {
+	if !r.game.IsStarted() {
+		return
+	}
+	if id, ok := r.users[u]; ok {
+		msg := Message{
+			Event: "game-info",
+			Data:  r.game.Info(id),
 		}
+		u.send(msg)
 	}
 }
 
