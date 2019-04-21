@@ -47,6 +47,9 @@ func (r RoomPharaoh) sendInfo(u *User) {
 			Data:  r.game.Info(id),
 		}
 		u.send(msg)
+		if r.game.IsCompleted() {
+			u.room = nil
+		}
 	}
 }
 
@@ -86,6 +89,9 @@ func (r RoomPharaoh) run() {
 					log.Println("game action ", move)
 					if gameErr == nil {
 						r.broadcastInfo()
+						if r.game.IsCompleted() {
+							r.hall.close <- &r
+						}
 					} else {
 						log.Println("error action", gameErr)
 					}

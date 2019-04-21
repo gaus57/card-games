@@ -5,7 +5,9 @@ import (
 	"log"
 	"net/http"
 	"os"
-	// "github.com/google/uuid"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 var addr = flag.String("addr", ":8080", "http service address")
@@ -17,18 +19,18 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// var uid string
-	// if cookie, err := r.Cookie("uid"); err == nil {
-	// 	uid = cookie.Value
-	// }
-	// if uid == "" {
-	// 	cookie := &http.Cookie{
-	// 		Name:    "uid",
-	// 		Value:   uuid.New().String(),
-	// 		Expires: time.Now().Add(365 * 24 * time.Hour),
-	// 	}
-	// 	http.SetCookie(w, cookie)
-	// }
+	var uid string
+	if cookie, err := r.Cookie("uid"); err == nil {
+		uid = cookie.Value
+	}
+	if uid == "" {
+		cookie := &http.Cookie{
+			Name:    "uid",
+			Value:   uuid.New().String(),
+			Expires: time.Now().Add(365 * 24 * time.Hour),
+		}
+		http.SetCookie(w, cookie)
+	}
 
 	switch r.URL.Path {
 	case "/":
@@ -46,9 +48,13 @@ func serveWs(h *Hall, w http.ResponseWriter, r *http.Request) {
 		uid = cookie.Value
 	}
 	log.Println("connect uid =", uid)
+	if uid == "" {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
 	user := h.getUser(uid)
 	if user == nil {
-		user = newUser(h)
+		user = newUser(h, uid)
 		// cookie := &http.Cookie{
 		// 	Name:    "uid",
 		// 	Value:   user.uid,

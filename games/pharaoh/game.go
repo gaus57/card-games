@@ -189,3 +189,7 @@ func (g *Game) Info(playerId int) *Info {
 func (g *Game) IsStarted() bool {
 	return g.isStarted
 }
+
+func (g *Game) IsCompleted() bool {
+	return g.isCompleted
+}

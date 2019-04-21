@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type User struct {
@@ -17,9 +15,9 @@ type User struct {
 	closeTimer *time.Timer
 }
 
-func newUser(h *Hall) *User {
+func newUser(h *Hall, uid string) *User {
 	u := &User{
-		uid:     uuid.New().String(),
+		uid:     uid,
 		hall:    h,
 		clients: make(map[*Client]bool),
 	}
@@ -56,8 +54,7 @@ func (u *User) addClient(c *Client) {
 	}
 	u.clients[c] = true
 	if u.room != nil {
-		timer := time.NewTimer(time.Millisecond * 100)
-		<-timer.C
+		time.Sleep(time.Millisecond * 100)
 		u.room.sendInfo(u)
 	}
 }
